@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Amber RSS Reader
 
-## Getting Started
+`feeds.yaml` に定義した RSS / Atom フィードを読み込み、1つのタイムラインとして表示する Next.js アプリです。
 
-First, run the development server:
+## Development
+
+開発サーバーの起動:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) を開くと確認できます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Feed Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+設定はルートの `feeds.yaml` で管理します。
 
-## Learn More
+```yaml
+defaultLimit: 10
+highlightKeywords:
+  - release
+filterKeywords:
+  - podcast
 
-To learn more about Next.js, take a look at the following resources:
+feeds:
+  - id: nextjs
+    title: Next.js Blog
+    url: https://nextjs.org/feed.xml
+    siteUrl: https://nextjs.org/blog
+    highlightKeywords:
+      - cache
+    filterKeywords:
+      - conference
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+ルール:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `defaultLimit`: `limit` 未指定時のデフォルト件数
+- `highlightKeywords`: 一致した記事を強調表示
+- `filterKeywords`: 一致した記事を一覧から除外
+- トップレベルのキーワードは全フィード共通
+- 各フィードのキーワードはそのフィードにだけ追加適用
 
-## Deploy on Vercel
+## Verification
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- RSS / Atom の取得はサーバー側で行います。
+- トップページは動的レンダリングです。

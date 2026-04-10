@@ -1,0 +1,37 @@
+# Top-level settings are applied to all feeds.
+defaultLimit: 100
+highlightKeywords:
+  - release
+  - React
+filterKeywords:
+  - podcast
+
+feeds:
+  - id: nextjs
+    title: Next.js Blog
+    url: https://nextjs.org/feed.xml
+    siteUrl: https://nextjs.org/blog
+    highlightKeywords:
+      - cache
+    filterKeywords:
+      - conference
+
+  - id: react
+    title: React Blog
+    url: https://react.dev/rss.xml
+    siteUrl: https://react.dev/blog
+    highlightKeywords:
+      - compiler
+
+  - id: publickey
+    title: Publickey
+    url: https://www.publickey1.jp/atom.xml
+    siteUrl: https://www.publickey1.jp/
+    highlightKeywords:
+      - AI
+      - LLM
+      - エージェント
+      - Agent
+      - AGENT
+    filterKeywords:
+      - PR
