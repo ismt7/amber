@@ -1,4 +1,4 @@
-## Amber RSS Reader
+## RSS Reader
 
 `feeds.yaml` に定義した RSS / Atom フィードを読み込み、1つのタイムラインとして表示する Next.js アプリです。
 
