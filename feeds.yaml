@@ -1,4 +1,12 @@
 # Top-level settings are applied to all feeds.
+# 
+# Example:
+# defaultLimit: 100
+# highlightKeywords:
+#   - release
+#   - React
+# filterKeywords:
+#   - podcast
 defaultLimit: 100
 highlightKeywords:
   - release
@@ -6,22 +14,22 @@ highlightKeywords:
 filterKeywords:
   - podcast
 
+# Feeds are defined in this section.
+#
+# Example:
+# - id: gihyo
+#   title: 技術評論者
+#   url: https://gihyo.jp/feed/rss2
+#   siteUrl: https://gihyo.jp/
+#   highlightKeywords:
+#     - AI
+#   filterKeywords:
+#     - PR
 feeds:
-  - id: nextjs
-    title: Next.js Blog
-    url: https://nextjs.org/feed.xml
-    siteUrl: https://nextjs.org/blog
-    highlightKeywords:
-      - cache
-    filterKeywords:
-      - conference
-
-  - id: react
-    title: React Blog
-    url: https://react.dev/rss.xml
-    siteUrl: https://react.dev/blog
-    highlightKeywords:
-      - compiler
+  - id: gihyo
+    title: 技術評論者
+    url: https://gihyo.jp/feed/rss2
+    siteUrl: https://gihyo.jp/
 
   - id: publickey
     title: Publickey

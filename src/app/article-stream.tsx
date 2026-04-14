@@ -66,6 +66,7 @@ export function ArticleStream({
   canRefreshCache,
 }: ArticleStreamProps) {
   const [isBookmarkSectionOpen, setIsBookmarkSectionOpen] = useState(false);
+  const [isReadSectionOpen, setIsReadSectionOpen] = useState(false);
   const bookmarks = useSyncExternalStore(subscribeToBookmarks, readBookmarks, getServerBookmarksSnapshot);
   const readState = useReadStateMap();
   const feedCache = useFeedCacheStore();
@@ -88,14 +89,16 @@ export function ArticleStream({
 
   const visibleEntries = useVisibleEntries(entries, selectedFeedId, isAllFetchFailed);
   const isUsingCachedEntries = entries.length === 0 && isAllFetchFailed && visibleEntries.length > 0;
+  const unreadEntries = useMemo(
+    () => visibleEntries.filter((entry) => !readState[entry.link]),
+    [readState, visibleEntries],
+  );
+  const readEntries = useMemo(
+    () => visibleEntries.filter((entry) => Boolean(readState[entry.link])),
+    [readState, visibleEntries],
+  );
 
   function toggleBookmark(entry: DisplayEntry) {
-    const isAddingBookmark = !bookmarks[entry.link];
-
-    if (isAddingBookmark) {
-      setIsBookmarkSectionOpen(true);
-    }
-
     const nextBookmarks = { ...bookmarks };
 
     if (nextBookmarks[entry.link]) {
@@ -143,44 +146,24 @@ export function ArticleStream({
         </p>
       ) : null}
 
-      <section className={styles.bookmarkPanel}>
-        <button
-          type="button"
-          className={styles.bookmarkSectionToggle}
-          aria-expanded={isBookmarkSectionOpen}
-          onClick={() => setIsBookmarkSectionOpen((current) => !current)}
-        >
-          <span className={styles.bookmarkSectionHeading}>ブックマーク</span>
-          <span className={styles.bookmarkSectionMeta}>{bookmarkedEntries.length}件</span>
-          <span className={styles.bookmarkSectionIcon} aria-hidden="true">
-            {isBookmarkSectionOpen ? "−" : "+"}
-          </span>
-        </button>
-
-        {isBookmarkSectionOpen ? (
-          bookmarkedEntries.length > 0 ? (
-            <ul className={styles.entryList}>
-              {bookmarkedEntries.map((entry) => (
-                <EntryCard
-                  key={`bookmark-${entry.link}`}
-                  entry={entry}
-                  isBookmarked={true}
-                  isRead={Boolean(readState[entry.link])}
-                  onToggleBookmark={toggleBookmark}
-                  onMarkAsRead={markAsRead}
-                  onToggleReadState={toggleReadState}
-                />
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.emptyState}>まだブックマークした記事はありません。</p>
-          )
-        ) : null}
-      </section>
+      <CollapsibleEntrySection
+        title="ブックマーク"
+        count={bookmarkedEntries.length}
+        isOpen={isBookmarkSectionOpen}
+        onToggle={() => setIsBookmarkSectionOpen((current) => !current)}
+        emptyMessage="まだブックマークした記事はありません。"
+        entries={bookmarkedEntries}
+        entryKeyPrefix="bookmark"
+        bookmarks={bookmarks}
+        readState={readState}
+        onToggleBookmark={toggleBookmark}
+        onMarkAsRead={markAsRead}
+        onToggleReadState={toggleReadState}
+      />
 
       <ul className={styles.entryList}>
-        {visibleEntries.length > 0 ? (
-          visibleEntries.map((entry) => (
+        {unreadEntries.length > 0 ? (
+          unreadEntries.map((entry) => (
             <EntryCard
               key={`${entry.feedId}-${entry.link}`}
               entry={entry}
@@ -191,6 +174,8 @@ export function ArticleStream({
               onToggleReadState={toggleReadState}
             />
           ))
+        ) : visibleEntries.length > 0 ? (
+          <li className={styles.emptyState}>表示中の記事はすべて既読です。下の「既読」から確認できます。</li>
         ) : (
           <li className={styles.emptyState}>
             {hasMediaFilter
@@ -199,7 +184,84 @@ export function ArticleStream({
           </li>
         )}
       </ul>
+
+      <CollapsibleEntrySection
+        title="既読"
+        count={readEntries.length}
+        isOpen={isReadSectionOpen}
+        onToggle={() => setIsReadSectionOpen((current) => !current)}
+        emptyMessage="まだ既読にした記事はありません。"
+        entries={readEntries}
+        entryKeyPrefix="read"
+        bookmarks={bookmarks}
+        readState={readState}
+        onToggleBookmark={toggleBookmark}
+        onMarkAsRead={markAsRead}
+        onToggleReadState={toggleReadState}
+      />
     </>
+  );
+}
+
+type CollapsibleEntrySectionProps = {
+  title: string;
+  count: number;
+  isOpen: boolean;
+  onToggle: () => void;
+  emptyMessage: string;
+  entries: DisplayEntry[];
+  entryKeyPrefix: string;
+  bookmarks: BookmarkMap;
+  readState: ReadStateMap;
+  onToggleBookmark: (entry: DisplayEntry) => void;
+  onMarkAsRead: (link: string) => void;
+  onToggleReadState: (link: string) => void;
+};
+
+function CollapsibleEntrySection({
+  title,
+  count,
+  isOpen,
+  onToggle,
+  emptyMessage,
+  entries,
+  entryKeyPrefix,
+  bookmarks,
+  readState,
+  onToggleBookmark,
+  onMarkAsRead,
+  onToggleReadState,
+}: CollapsibleEntrySectionProps) {
+  return (
+    <section className={styles.collapsiblePanel}>
+      <button type="button" className={styles.collapsibleSectionToggle} aria-expanded={isOpen} onClick={onToggle}>
+        <span className={styles.collapsibleSectionHeading}>{title}</span>
+        <span className={styles.collapsibleSectionMeta}>{count}件</span>
+        <span className={styles.collapsibleSectionIcon} aria-hidden="true">
+          {isOpen ? "−" : "+"}
+        </span>
+      </button>
+
+      {isOpen ? (
+        entries.length > 0 ? (
+          <ul className={styles.entryList}>
+            {entries.map((entry) => (
+              <EntryCard
+                key={`${entryKeyPrefix}-${entry.link}`}
+                entry={entry}
+                isBookmarked={Boolean(bookmarks[entry.link])}
+                isRead={Boolean(readState[entry.link])}
+                onToggleBookmark={onToggleBookmark}
+                onMarkAsRead={onMarkAsRead}
+                onToggleReadState={onToggleReadState}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.emptyState}>{emptyMessage}</p>
+        )
+      ) : null}
+    </section>
   );
 }
 
