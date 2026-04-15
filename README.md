@@ -67,6 +67,62 @@ feeds:
 - トップレベルのキーワードは全フィード共通
 - 各フィードのキーワードはそのフィードにだけ追加適用
 
+## Docker (GHCR イメージを使う)
+
+`main` ブランチへのプッシュで `ghcr.io/ismt7/amber:latest` が自動ビルド・公開されます。
+ローカルに Node.js 環境を用意しなくても、以下の方法で起動できます。
+
+### docker run
+
+```bash
+docker run -d \
+  --name amber \
+  -p 3000:3000 \
+  -v "$(pwd)/feeds.yaml:/app/feeds.yaml:ro" \
+  ghcr.io/ismt7/amber:latest
+```
+
+| オプション | 説明 |
+|---|---|
+| `-p 3000:3000` | ホストの 3000 番ポートにマッピング |
+| `-v .../feeds.yaml:/app/feeds.yaml:ro` | ホストの `feeds.yaml` をコンテナに読み込み専用でマウント |
+
+起動後、[http://localhost:3000](http://localhost:3000) を開くと確認できます。
+
+### compose.yml
+
+プロジェクトルートに以下の `compose.yml` を作成します（`feeds.yaml` と同じディレクトリに置いてください）。
+
+```yaml
+services:
+  app:
+    image: ghcr.io/ismt7/amber:latest
+    container_name: amber
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./feeds.yaml:/app/feeds.yaml:ro
+    restart: unless-stopped
+```
+
+起動:
+
+```bash
+docker compose up -d
+```
+
+停止:
+
+```bash
+docker compose down
+```
+
+`feeds.yaml` を編集した場合はコンテナを再起動してください:
+
+```bash
+docker compose restart
+```
+
 ## Verification
 
 ```bash
