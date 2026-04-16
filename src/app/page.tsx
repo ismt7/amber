@@ -2,6 +2,7 @@ import { ArticleStream, type DisplayEntry } from "@/app/article-stream";
 import { FeedFilter } from "@/app/feed-filter";
 import { StreamBulkReadButton } from "@/app/stream-bulk-read-button";
 import { StreamSettingsButton } from "@/app/stream-settings-button";
+import { comparePublishedAt } from "@/lib/date-utils";
 import { loadFeedResults } from "@/lib/rss";
 import styles from "./page.module.css";
 
@@ -36,13 +37,13 @@ export default async function Home({ searchParams }: HomeProps) {
       })),
     )
     .sort((left, right) => comparePublishedAt(right.publishedAt, left.publishedAt));
-  const mergedEntries = selectedFeedId
-    ? allEntries.filter((entry) => entry.feedId === selectedFeedId)
-    : allEntries;
   const selectedFeedTitle = selectedFeedId
     ? feedOptions.find((option) => option.value === selectedFeedId)?.label ?? ""
     : "";
-  const displayedEntriesCount = mergedEntries.length;
+  // For stats: count entries for the selected feed server-side (stat display only).
+  const displayedEntriesCount = selectedFeedId
+    ? allEntries.filter((e) => e.feedId === selectedFeedId).length
+    : allEntries.length;
   const failedFeeds = results.filter((result) => result.error);
   const isAllFetchFailed = failedFeeds.length === results.length;
   const canRefreshCache = failedFeeds.length === 0;
@@ -78,7 +79,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </div>
             <div className={styles.sectionActions}>
               <StreamBulkReadButton
-                entries={mergedEntries}
+                allEntries={allEntries}
                 selectedFeedId={selectedFeedId}
                 isAllFetchFailed={isAllFetchFailed}
               />
@@ -87,7 +88,6 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
           <FeedFilter options={feedOptions} value={selectedFeedId} />
           <ArticleStream
-            entries={mergedEntries}
             allEntries={allEntries}
             hasMediaFilter={Boolean(selectedFeedId)}
             selectedFeedId={selectedFeedId}
@@ -115,17 +115,6 @@ export default async function Home({ searchParams }: HomeProps) {
       </main>
     </div>
   );
-}
-
-function comparePublishedAt(left?: string, right?: string) {
-  const leftTime = left ? new Date(left).getTime() : Number.NEGATIVE_INFINITY;
-  const rightTime = right ? new Date(right).getTime() : Number.NEGATIVE_INFINITY;
-
-  return normalizeTime(leftTime) - normalizeTime(rightTime);
-}
-
-function normalizeTime(value: number) {
-  return Number.isNaN(value) ? Number.NEGATIVE_INFINITY : value;
 }
 
 function getFeedQueryParam(value?: string | string[]) {

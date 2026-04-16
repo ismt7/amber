@@ -44,7 +44,6 @@ export function FeedFilter({ options, value }: FeedFilterProps) {
           value={value}
           onChange={(event) => handleChange(event.target.value)}
           disabled={isPending}
-          aria-label="表示メディア"
         >
           <option value="">すべて</option>
           {options.map((option) => (
