@@ -1,0 +1,45 @@
+name: Docker Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile
+          target: runner
+          tags: amber-test:latest
+          push: false
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start container
+        run: docker run -d --name amber-test -p 3000:3000 amber-test:latest
+
+      - name: Wait for container to be ready
+        run: sleep 10
+
+      - name: Smoke test
+        run: curl --retry 5 --retry-delay 3 --retry-connrefused -f http://localhost:3000/
+
+      - name: Dump container logs
+        if: failure()
+        run: docker logs amber-test
+
+      - name: Cleanup
+        if: always()
+        run: docker stop amber-test && docker rm amber-test
