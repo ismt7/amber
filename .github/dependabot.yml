@@ -18,3 +18,13 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 10
+
+  # Docker の依存関係を自動更新
+  - package-ecosystem: "docker"
+    directory: "/infra/docker"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+    open-pull-requests-limit: 10
