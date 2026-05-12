@@ -1,5 +1,28 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# AGENTS.md
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+## プロジェクト概要
+RSSリーダーは、ユーザーが複数のRSSフィードを一元管理できるアプリケーションです。ユーザーはフィードを追加、削除、編集でき、最新のニュースや記事を簡単に閲覧できます。
+
+## アーキテクチャ
+<!-- システムの全体構成を記述してください -->
+
+## 開発ガイドライン
+
+### コードスタイル
+- リポジトリの既存のコード規約に従ってください
+
+### テスト
+- 新機能にはテストを作成してください
+- 変更前にテストが通ることを確認してください
+
+### コミットメッセージ
+- 変更内容が明確に伝わるメッセージを書いてください
+
+## 主要コマンド
+<!-- 開発で使用する主要なコマンドを記述してください -->
+
+## AIエージェントへの注意事項
+
+英語で考えて日本語で回答してください。
+
+<!-- その他、AIコーディングエージェント向けの特記事項・コンテキストを記述してください -->
