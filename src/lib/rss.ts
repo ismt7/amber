@@ -2,6 +2,7 @@ import "server-only";
 
 import { XMLParser } from "fast-xml-parser";
 import { getFeedConfigPath, loadFeedConfig, type FeedConfig } from "@/lib/feed-config";
+import { persistFeedEntries } from "@/lib/db/persist-feed-entries";
 
 export type FeedEntry = {
   title: string;
@@ -81,6 +82,8 @@ async function fetchFeedEntries(feed: FeedConfig): Promise<{
   if (allEntries.length === 0) {
     throw new Error("記事を抽出できませんでした。");
   }
+
+  await persistFeedEntries(feed.id, entries);
 
   return { entries, filteredOutCount };
 }

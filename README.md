@@ -10,7 +10,8 @@
 - **既読 / 未読管理**: 既読状態をブラウザの localStorage に保存
 - **まとめて既読**: 表示中の未読記事を一括で既読にマーク
 - **ブックマーク**: 記事をローカルにブックマーク保存（localStorage）
-- **フィードキャッシュ**: 取得失敗時の代替表示として直前の一覧を localStorage に保持
+- **エントリー永続化**: 取得した RSS / Atom の記事をサーバー側の Postgres（ORM 管理）に保存
+- **フィードキャッシュ**: 取得失敗時の代替表示として直前の一覧を保持
 
 ## Development
 
@@ -67,10 +68,11 @@ feeds:
 - トップレベルのキーワードは全フィード共通
 - 各フィードのキーワードはそのフィードにだけ追加適用
 
-## Docker (GHCR イメージを使う)
+## Docker (利用者向け / GHCR イメージ)
 
 `main` ブランチへのプッシュで `ghcr.io/ismt7/amber:latest` が自動ビルド・公開されます。
-ローカルに Node.js 環境を用意しなくても、以下の方法で起動できます。
+コンテナ利用者向けの起動方法として、`docker run` と `docker compose` を案内します。
+開発用 compose では同梱の Postgres に接続します。
 
 ### docker run
 
@@ -78,6 +80,7 @@ feeds:
 docker run -d \
   --name amber \
   -p 3000:3000 \
+  -e DATABASE_URL=postgres://amber:amber@host.docker.internal:5432/amber \
   -v "$(pwd)/feeds.yaml:/app/feeds.yaml:ro" \
   ghcr.io/ismt7/amber:latest
 ```
@@ -86,42 +89,55 @@ docker run -d \
 |---|---|
 | `-p 3000:3000` | ホストの 3000 番ポートにマッピング |
 | `-v .../feeds.yaml:/app/feeds.yaml:ro` | ホストの `feeds.yaml` をコンテナに読み込み専用でマウント |
+| `-e DATABASE_URL=...` | 接続先 Postgres の URL |
 
 起動後、[http://localhost:3000](http://localhost:3000) を開くと確認できます。
 
-### compose.yml
-
-プロジェクトルートに以下の `compose.yml` を作成します（`feeds.yaml` と同じディレクトリに置いてください）。
+### docker compose
 
 ```yaml
 services:
   app:
-    image: ghcr.io/ismt7/amber:latest
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: dev
     container_name: amber
     ports:
       - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://amber:amber@postgres:5432/amber
     volumes:
-      - ./feeds.yaml:/app/feeds.yaml:ro
+      - ../..:/app
+      - ../../feeds.yaml:/app/feeds.yaml:ro
+    command: npm run dev
     restart: unless-stopped
-```
 
-起動:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: amber
+      POSTGRES_USER: amber
+      POSTGRES_PASSWORD: amber
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
+```
 
 ```bash
-docker compose up -d
+docker compose -f infra/docker/compose.yml up --build
+docker compose -f infra/docker/compose.yml down
 ```
 
-停止:
+Postgres は compose 内で起動します。
 
-```bash
-docker compose down
-```
-
-`feeds.yaml` を編集した場合はコンテナを再起動してください:
-
-```bash
-docker compose restart
-```
+開発者向けの Docker compose / bind mount の手順は [`docs/development/docker.md`](docs/development/docker.md) にまとめています。
 
 ## Verification
 
@@ -134,4 +150,5 @@ npm run build
 
 - RSS / Atom の取得はサーバー側で行います。
 - トップページは動的レンダリングです（常に最新の記事を取得します）。
-- 既読状態・ブックマーク・フィードキャッシュはブラウザの localStorage に保存されます。設定ダイアログから個別または一括で削除できます。
+- 既読状態・ブックマークはブラウザの localStorage に保存されます。設定ダイアログから個別または一括で削除できます。
+- 取得した RSS / Atom エントリーはサーバー側の Postgres（ORM 管理）に永続化されます。
