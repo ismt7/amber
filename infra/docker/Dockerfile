@@ -1,12 +1,12 @@
 # Stage 1: Install production dependencies
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 # Stage 2: Install all dependencies for development
-FROM node:24-alpine AS dev
+FROM node:26-alpine AS dev
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -21,7 +21,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 # Stage 3: Build the application
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -33,7 +33,7 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # Stage 4: Minimal production runner
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
