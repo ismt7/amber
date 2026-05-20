@@ -6,14 +6,25 @@ import postgres from "postgres";
 
 import * as schema from "./schema";
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL?.trim();
 let client: ReturnType<typeof postgres> | undefined;
 
 let initPromise: Promise<void> | undefined;
 
+export class DatabaseNotConfiguredError extends Error {
+  constructor() {
+    super("DATABASE_URL is required for the Postgres database connection.");
+    this.name = "DatabaseNotConfiguredError";
+  }
+}
+
+export function isDatabaseConfigured() {
+  return Boolean(databaseUrl);
+}
+
 function getClient() {
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required for the Postgres database connection.");
+    throw new DatabaseNotConfiguredError();
   }
 
   client ??= postgres(databaseUrl, {

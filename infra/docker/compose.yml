@@ -11,6 +11,9 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
       DATABASE_URL: postgres://amber:amber@postgres:5432/amber
+      BATCH_FETCH_TOKEN: ${BATCH_FETCH_TOKEN:-local-dev-batch-token}
+      IN_APP_FEED_SYNC_ENABLED: ${IN_APP_FEED_SYNC_ENABLED:-true}
+      FEED_SYNC_INTERVAL_SECONDS: ${FEED_SYNC_INTERVAL_SECONDS:-1800}
     volumes:
       - ../..:/app
       - ../../feeds.yaml:/app/feeds.yaml:ro

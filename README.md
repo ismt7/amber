@@ -23,6 +23,11 @@ npm run dev
 
 [http://localhost:3000](http://localhost:3000) を開くと確認できます。
 
+`DATABASE_URL` が未設定でも画面表示はできますが、Postgres を使う以下の機能は無効になります。
+
+- RSS / Atom エントリーのサーバー側永続化
+- 内部API経由の定期フィード同期
+
 本番ビルドの起動:
 
 ```bash
@@ -71,73 +76,173 @@ feeds:
 ## Docker (利用者向け / GHCR イメージ)
 
 `main` ブランチへのプッシュで `ghcr.io/ismt7/amber:latest` が自動ビルド・公開されます。
-コンテナ利用者向けの起動方法として、`docker run` と `docker compose` を案内します。
-開発用 compose では同梱の Postgres に接続します。
+利用者向けの最短起動は `docker run` です。
+
+### 最短起動手順（ユーザー向け）
+
+1. `feeds.yaml` を用意する（ホスト側）。
+2. アプリ用ネットワークを作成する。
+3. Postgres コンテナを起動する。
+4. 以下の `docker run` でアプリを起動する。
+
+```bash
+docker network create amber-net
+
+docker run -d \
+  --name amber-postgres \
+  --network amber-net \
+  -e POSTGRES_DB=amber \
+  -e POSTGRES_USER=amber \
+  -e POSTGRES_PASSWORD=amber \
+  -v amber-postgres-data:/var/lib/postgresql/data \
+  postgres:16
+```
 
 ### docker run
 
 ```bash
 docker run -d \
   --name amber \
+  --network amber-net \
   -p 3000:3000 \
-  -e DATABASE_URL=postgres://amber:amber@host.docker.internal:5432/amber \
+  -e DATABASE_URL=postgres://amber:amber@amber-postgres:5432/amber \
   -v "$(pwd)/feeds.yaml:/app/feeds.yaml:ro" \
   ghcr.io/ismt7/amber:latest
 ```
 
 | オプション | 説明 |
 |---|---|
+| `--network amber-net` | アプリと Postgres を同一ネットワークに参加させる |
 | `-p 3000:3000` | ホストの 3000 番ポートにマッピング |
 | `-v .../feeds.yaml:/app/feeds.yaml:ro` | ホストの `feeds.yaml` をコンテナに読み込み専用でマウント |
-| `-e DATABASE_URL=...` | 接続先 Postgres の URL |
+| `-e DATABASE_URL=...` | 接続先 Postgres（`amber-postgres:5432`）の URL |
 
-起動後、[http://localhost:3000](http://localhost:3000) を開くと確認できます。
+起動確認:
+
+```bash
+docker logs -f amber
+```
+
+[http://localhost:3000](http://localhost:3000) を開くと確認できます。
+
+### 自動バッチ（既定で有効）
+
+コンテナ起動時に、内部スケジューラが自動で定期取得を開始します。
+
+- 既定: `IN_APP_FEED_SYNC_ENABLED=true`
+- 既定: `FEED_SYNC_INTERVAL_SECONDS=1800`（30分ごと）
+
+必要に応じて `docker run` に環境変数を追加してください。
+
+```bash
+docker run -d \
+  --name amber \
+  --network amber-net \
+  -p 3000:3000 \
+  -e DATABASE_URL=postgres://amber:amber@amber-postgres:5432/amber \
+  -e IN_APP_FEED_SYNC_ENABLED=true \
+  -e FEED_SYNC_INTERVAL_SECONDS=900 \
+  -v "$(pwd)/feeds.yaml:/app/feeds.yaml:ro" \
+  ghcr.io/ismt7/amber:latest
+```
+
+停止/再起動:
+
+```bash
+docker stop amber
+docker start amber
+
+docker stop amber-postgres
+docker start amber-postgres
+```
 
 ### docker compose
+
+利用者向けの `compose.yaml` 記載例です（本番ランナー用イメージを利用）。
+
+`compose.yaml` として保存してください。
 
 ```yaml
 services:
   app:
-    build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile
-      target: dev
+    image: ghcr.io/ismt7/amber:latest
     container_name: amber
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: development
-      DATABASE_URL: postgres://amber:amber@postgres:5432/amber
+      DATABASE_URL: postgres://amber:amber@db:5432/amber
+      IN_APP_FEED_SYNC_ENABLED: "true"
+      FEED_SYNC_INTERVAL_SECONDS: "1800"
     volumes:
-      - ../..:/app
-      - ../../feeds.yaml:/app/feeds.yaml:ro
-    command: npm run dev
-    restart: unless-stopped
+      - ./feeds.yaml:/app/feeds.yaml:ro
 
-  postgres:
-    image: postgres:16-alpine
+  db:
+    image: docker.io/library/postgres:16
+    container_name: amber-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: amber
       POSTGRES_USER: amber
       POSTGRES_PASSWORD: amber
-    ports:
-      - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - postgresql:/var/lib/postgresql/data
 
 volumes:
-  db-data:
+  postgresql:
 ```
 
 ```bash
-docker compose -f infra/docker/compose.yml up --build
-docker compose -f infra/docker/compose.yml down
+docker compose up -d
+docker compose logs -f app
+docker compose down
 ```
 
-Postgres は compose 内で起動します。
+この例では Postgres も compose 内で同時起動します。
+
+このリポジトリに含まれる `infra/docker/compose.yml` は開発用途です。
 
 開発者向けの Docker compose / bind mount の手順は [`docs/development/docker.md`](docs/development/docker.md) にまとめています。
+
+## Scheduled Feed Sync
+
+簡易運用では、コンテナ起動時に Webアプリ内スケジューラが自動で有効になります。
+
+- 既定: `IN_APP_FEED_SYNC_ENABLED=true`
+- 既定: `FEED_SYNC_INTERVAL_SECONDS=1800`（30分ごと）
+
+Nodeプロセス起動中はアプリ内で定期実行されます。
+
+無効化したい場合:
+
+- `IN_APP_FEED_SYNC_ENABLED=false`
+
+間隔を変えたい場合:
+
+- `FEED_SYNC_INTERVAL_SECONDS=<seconds>`
+
+必須環境変数:
+
+- `BATCH_FETCH_TOKEN`（手動トリガーAPI利用時のトークン）
+
+手動実行用の内部APIも利用できます。
+
+- エンドポイント: `POST /api/internal/feed-sync`
+- 認証: `Authorization: Bearer ${BATCH_FETCH_TOKEN}`
+- 同時実行: Postgres advisory lock で重複実行を防止（実行中は `409`）
+
+手動実行例:
+
+```bash
+curl --fail --show-error --silent \
+  --request POST \
+  --header "Authorization: Bearer ${BATCH_FETCH_TOKEN}" \
+  http://localhost:3000/api/internal/feed-sync
+```
+
+外部cronで運用したい場合は、上記 API を30分間隔で呼び出してください。
 
 ## Verification
 

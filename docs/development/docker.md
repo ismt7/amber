@@ -54,3 +54,27 @@ docker compose -f infra/docker/compose.yml restart
 - `node_modules` はホスト側のものを使う前提です。
 - Postgres は compose 内で立ち上がり、アプリは `postgres:5432` に接続します。
 - development は bind mount を使うので、コード変更をすぐ反映できます。
+
+## Scheduled Feed Sync (external trigger)
+
+定期取得は `app` コンテナ内スケジューラで簡易運用できます。
+
+- 既定で `IN_APP_FEED_SYNC_ENABLED=true`
+- 既定で `FEED_SYNC_INTERVAL_SECONDS=1800`（秒）
+
+コンテナ起動時に自動で定期取得が開始されます。
+
+補助として手動トリガーAPIも利用できます。
+
+- 必須環境変数: `BATCH_FETCH_TOKEN`（手動トリガーAPI用）
+- 同時実行時は重複防止のため `409` が返ります。
+
+手動疎通:
+
+```bash
+curl --fail --show-error --silent \
+  --request POST \
+  --header "Authorization: Bearer ${BATCH_FETCH_TOKEN}" \
+  http://localhost:3000/api/internal/feed-sync
+```
+

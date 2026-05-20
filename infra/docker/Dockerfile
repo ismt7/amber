@@ -39,6 +39,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
+ENV IN_APP_FEED_SYNC_ENABLED=true
+ENV FEED_SYNC_INTERVAL_SECONDS=1800
 
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs \
