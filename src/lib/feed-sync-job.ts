@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 
-import { syncFeedsBatch, type FeedSyncSummary } from "@/lib/feed-sync";
+import { syncFeedsBatch } from "@/lib/feed-sync";
 import { DatabaseNotConfiguredError, ensureDatabase, getDatabase, isDatabaseConfigured } from "@/lib/db/client";
+import type { FeedSyncSummary } from "@/lib/feed-sync-types";
 
 const FEED_SYNC_ADVISORY_LOCK_KEY = 934857120394857;
 

@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 
 import { ensureDatabase, getDatabase, isDatabaseConfigured } from "./client";
 import { feedEntries, type InsertFeedEntry } from "./schema";
-import type { FeedEntry } from "@/lib/feed-sync";
+import type { FeedEntry } from "@/lib/feed-sync-types";
 
 export async function persistFeedEntries(feedId: string, entries: FeedEntry[]) {
   if (entries.length === 0) {

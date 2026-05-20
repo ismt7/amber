@@ -1,7 +1,8 @@
 import "server-only";
 
 import { getFeedConfigPath } from "@/lib/feed-config";
-import { syncFeedsBatch, type FeedEntry, type FeedSyncResult } from "@/lib/feed-sync";
+import { syncFeedsBatch } from "@/lib/feed-sync";
+import type { FeedEntry, FeedSyncResult } from "@/lib/feed-sync-types";
 
 export type { FeedEntry };
 export type FeedResult = FeedSyncResult;

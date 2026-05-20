@@ -244,6 +244,7 @@ Nodeプロセス起動中はアプリ内で定期実行されます。
 - エンドポイント: `POST /api/internal/feed-sync`
 - 認証: `Authorization: Bearer ${BATCH_FETCH_TOKEN}`
 - 同時実行: Postgres advisory lock で重複実行を防止（実行中は `409`）
+- 画面上の「バッチ実行」ボタンからも同じ同期ジョブを手動実行可能
 
 手動実行例:
 

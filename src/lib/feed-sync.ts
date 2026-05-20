@@ -3,39 +3,7 @@ import "server-only";
 import { XMLParser } from "fast-xml-parser";
 import { loadFeedConfig, type FeedConfig } from "@/lib/feed-config";
 import { persistFeedEntries } from "@/lib/db/persist-feed-entries";
-
-export type FeedEntry = {
-  title: string;
-  link: string;
-  publishedAt?: string;
-  summary?: string;
-  matchedHighlightKeywords: string[];
-};
-
-export type FeedSyncResult = {
-  feed: FeedConfig;
-  entries: FeedEntry[];
-  filteredOutCount: number;
-  error?: string;
-};
-
-export type FeedSyncSummary = {
-  fetchedAt: string;
-  totals: {
-    feeds: number;
-    succeeded: number;
-    failed: number;
-    entries: number;
-    filteredOut: number;
-  };
-  failures: Array<{
-    feedId: string;
-    feedTitle: string;
-    feedUrl: string;
-    error: string;
-  }>;
-  results: FeedSyncResult[];
-};
+import type { FeedEntry, FeedSyncResult, FeedSyncSummary } from "@/lib/feed-sync-types";
 
 const parser = new XMLParser({
   ignoreAttributes: false,

@@ -1,9 +1,11 @@
 import { ArticleStream, type DisplayEntry } from "@/app/article-stream";
 import { FeedFilter } from "@/app/feed-filter";
+import { ManualFeedSyncButton } from "@/app/manual-feed-sync-button";
 import { StreamBulkReadButton } from "@/app/stream-bulk-read-button";
 import { StreamSettingsButton } from "@/app/stream-settings-button";
 import { comparePublishedAt } from "@/lib/date-utils";
 import { loadFeedResults } from "@/lib/rss";
+import { isDatabaseConfigured } from "@/lib/db/client";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +49,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const failedFeeds = results.filter((result) => result.error);
   const isAllFetchFailed = failedFeeds.length === results.length;
   const canRefreshCache = failedFeeds.length === 0;
+  const canRunManualFeedSync = isDatabaseConfigured();
 
   return (
     <div className={styles.page}>
@@ -78,6 +81,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <h2>{selectedFeedTitle ? `${selectedFeedTitle} の記事を表示中` : "一覧"}</h2>
             </div>
             <div className={styles.sectionActions}>
+              <ManualFeedSyncButton canRun={canRunManualFeedSync} />
               <StreamBulkReadButton
                 allEntries={allEntries}
                 selectedFeedId={selectedFeedId}

@@ -1,4 +1,4 @@
-import { FeedSyncAlreadyRunningError, runFeedSyncJob } from "@/lib/feed-sync-job";
+import { runFeedSyncJobAsResponse } from "@/lib/feed-sync-response";
 
 export const runtime = "nodejs";
 
@@ -22,18 +22,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  try {
-    const summary = await runFeedSyncJob("internal-api");
-    return Response.json(summary);
-  } catch (error) {
-    if (error instanceof FeedSyncAlreadyRunningError) {
-      return Response.json({ error: error.message }, { status: 409 });
-    }
-
-    console.error("[feed-sync] batch endpoint failed", error);
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    return Response.json({ error: message }, { status: 500 });
-  }
+  return runFeedSyncJobAsResponse("internal-api");
 }
 
 function getBearerToken(authorization: string) {
