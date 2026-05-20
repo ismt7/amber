@@ -23,7 +23,7 @@ npm run dev
 
 [http://localhost:3000](http://localhost:3000) を開くと確認できます。
 
-`DATABASE_URL` が未設定でも画面表示はできますが、Postgres を使う以下の機能は無効になります。
+`DATABASE_URL` または `POSTGRES_HOST` / `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD`（`POSTGRES_PORT` は省略時 `5432`）が未設定でも画面表示はできますが、Postgres を使う以下の機能は無効になります。
 
 - RSS / Atom エントリーのサーバー側永続化
 - 内部API経由の定期フィード同期
@@ -105,7 +105,11 @@ docker run -d \
   --name amber \
   --network amber-net \
   -p 3000:3000 \
-  -e DATABASE_URL=postgres://amber:amber@amber-postgres:5432/amber \
+  -e POSTGRES_HOST=amber-postgres \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_DB=amber \
+  -e POSTGRES_USER=amber \
+  -e POSTGRES_PASSWORD=amber \
   -v "$(pwd)/feeds.yaml:/app/feeds.yaml:ro" \
   ghcr.io/ismt7/amber:latest
 ```
@@ -115,7 +119,7 @@ docker run -d \
 | `--network amber-net` | アプリと Postgres を同一ネットワークに参加させる |
 | `-p 3000:3000` | ホストの 3000 番ポートにマッピング |
 | `-v .../feeds.yaml:/app/feeds.yaml:ro` | ホストの `feeds.yaml` をコンテナに読み込み専用でマウント |
-| `-e DATABASE_URL=...` | 接続先 Postgres（`amber-postgres:5432`）の URL |
+| `-e POSTGRES_HOST=...` ほか | 接続先 Postgres のホスト・ポート・DB名・ユーザー・パスワード |
 
 起動確認:
 
@@ -139,7 +143,11 @@ docker run -d \
   --name amber \
   --network amber-net \
   -p 3000:3000 \
-  -e DATABASE_URL=postgres://amber:amber@amber-postgres:5432/amber \
+  -e POSTGRES_HOST=amber-postgres \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_DB=amber \
+  -e POSTGRES_USER=amber \
+  -e POSTGRES_PASSWORD=amber \
   -e IN_APP_FEED_SYNC_ENABLED=true \
   -e FEED_SYNC_INTERVAL_SECONDS=900 \
   -v "$(pwd)/feeds.yaml:/app/feeds.yaml:ro" \
@@ -171,7 +179,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://amber:amber@db:5432/amber
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: amber
+      POSTGRES_USER: amber
+      POSTGRES_PASSWORD: amber
       IN_APP_FEED_SYNC_ENABLED: "true"
       FEED_SYNC_INTERVAL_SECONDS: "1800"
     volumes:

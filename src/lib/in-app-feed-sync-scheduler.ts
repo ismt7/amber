@@ -16,7 +16,7 @@ export function startInAppFeedSyncScheduler() {
   }
 
   if (!isDatabaseConfigured()) {
-    console.info("[feed-sync] in-app scheduler disabled because DATABASE_URL is not configured");
+    console.info("[feed-sync] in-app scheduler disabled because Postgres connection env vars are not configured");
     return;
   }
 

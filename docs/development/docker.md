@@ -18,7 +18,11 @@ services:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
-      DATABASE_URL: postgres://amber:amber@postgres:5432/amber
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: amber
+      POSTGRES_USER: amber
+      POSTGRES_PASSWORD: amber
     volumes:
       - ../..:/app
       - ../../feeds.yaml:/app/feeds.yaml:ro
@@ -52,7 +56,7 @@ docker compose -f infra/docker/compose.yml restart
 
 - `feeds.yaml` は実行時に必要なので、必ずマウントします。
 - `node_modules` はホスト側のものを使う前提です。
-- Postgres は compose 内で立ち上がり、アプリは `postgres:5432` に接続します。
+- Postgres は compose 内で立ち上がり、アプリは `POSTGRES_HOST=postgres` などの個別環境変数で接続します。
 - development は bind mount を使うので、コード変更をすぐ反映できます。
 
 ## Scheduled Feed Sync (external trigger)
@@ -77,4 +81,3 @@ curl --fail --show-error --silent \
   --header "Authorization: Bearer ${BATCH_FETCH_TOKEN}" \
   http://localhost:3000/api/internal/feed-sync
 ```
-

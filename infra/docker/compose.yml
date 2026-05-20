@@ -10,7 +10,11 @@ services:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
-      DATABASE_URL: postgres://amber:amber@postgres:5432/amber
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: amber
+      POSTGRES_USER: amber
+      POSTGRES_PASSWORD: amber
       BATCH_FETCH_TOKEN: ${BATCH_FETCH_TOKEN:-local-dev-batch-token}
       IN_APP_FEED_SYNC_ENABLED: ${IN_APP_FEED_SYNC_ENABLED:-true}
       FEED_SYNC_INTERVAL_SECONDS: ${FEED_SYNC_INTERVAL_SECONDS:-1800}
